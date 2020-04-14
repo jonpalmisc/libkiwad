@@ -1,0 +1,36 @@
+* KingsIsle WAD File Format Specification
+
+This document details the anatomy of a KingsIsle WAD file (KIWAD). To begin,
+a KIWAD file can be divided into three basic parts:
+
+1. the archive header, containing the magic bytes, WAD version, and file count;
+2. the file list, which provides info on every file in the archive; and
+3. the data section, which contains the data of all the files in the archive.
+
+** Archive header
+
+Every archive begins with a short header with the following structure:
+
+| field   | type   | description                                |
+|---------+--------+--------------------------------------------|
+| magic   | string | KIWAD; used for identification             |
+| version | int32  | what version of the WAD format the file is |
+| count   | int32  | the number of files in the archive         |
+
+If the KIWAD is version 2 or greater, there will be a spacing byte appended at
+the end of the header.
+
+** File list
+
+After the header comes the file list, which is composed of many smaller chunks
+of data detailing each file in the archive. Each chunk is structured as follows:
+
+| field      | type   | description                                      |
+|------------+--------+--------------------------------------------------|
+| offset     | int32  | the offset of the file's data in the archive     |
+| size       | int32  | how large the file is (in bytes)                 |
+| comp_size  | int32  | how large the file is when compressed (in bytes) |
+| compressed | bool   | whether the file is compressed or not            |
+| checksum   | int32  | the CRC checksum of the file                     |
+| path_len   | int32  | how long (in bytes) the file's path is           |
+| path       | string | the path of the file in the archive              |
