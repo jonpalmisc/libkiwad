@@ -40,11 +40,49 @@ int wad_archive_init(wad_archive *ar, char *filename) {
     fread(&ce->zipped, sizeof(char), 1, ar->file);
     fread(&ce->checksum, sizeof(int32_t), 1, ar->file);
     fread(&ce->nameLength, sizeof(int32_t), 1, ar->file);
-  
-    // The nameLength specified in the archive includes the null-terminatior.
+
+    // The nameLength specified in the archive includes the null-terminator.
     ce->name = malloc(ce->nameLength * sizeof(char));
     fread(ce->name, ce->nameLength, 1, ar->file);
   }
+
+  return WE_SUCCESS;
+}
+
+int wad_archive_read(wad_archive *ar, wad_entry *ent, unsigned char **buf) {
+
+  // TODO: Add support for compressed files.
+  if (ent->zipped) {
+    return WE_UNIMPLEMENTED;
+  }
+
+  // Jump to the offset where the file's data begins.
+  fseek(ar->file, ent->offset, SEEK_SET);
+
+  // Read the file's contents into a buffer.
+  *buf = calloc(ent->size, 1);
+  size_t read = fread(*buf, 1, ent->size, ar->file);
+
+  return WE_SUCCESS;
+}
+
+int wad_archive_stat(wad_archive *ar, wad_entry *ent) {
+  fseek(ar->file, ent->offset, SEEK_SET);
+
+  // Read the first 4 bytes of the file to determine if it is empty.
+  int32_t check = 0;
+  fread(&check, sizeof(int32_t), 1, ar->file);
+  if (check == 0) {
+    return WS_EMPTY;
+  }
+
+  return WS_OK;
+}
+
+// Deinitalize a WAD archive by freeing all entries and the input stream.
+int wad_archive_deinit(wad_archive *ar) {
+  free(ar->entries);
+  fclose(ar->file);
 
   return WE_SUCCESS;
 }

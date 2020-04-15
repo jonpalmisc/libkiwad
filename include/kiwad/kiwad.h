@@ -11,6 +11,11 @@
 #define WE_SUCCESS 0
 #define WE_IO_FAILURE 1
 #define WE_INVALID_FORMAT 2
+#define WE_EMPTY_FILE 3
+#define WE_UNIMPLEMENTED 99
+
+#define WS_OK 0
+#define WS_EMPTY 1
 
 // An entry inside a WAD archive.
 typedef struct {
@@ -32,5 +37,8 @@ typedef struct {
 } wad_archive;
 
 int wad_archive_init(wad_archive *ar, char *filename);
+int wad_archive_read(wad_archive *ar, wad_entry *ent, unsigned char **buf);
+int wad_archive_stat(wad_archive *ar, wad_entry *ent);
+int wad_archive_deinit(wad_archive *ar);
 
 #endif
