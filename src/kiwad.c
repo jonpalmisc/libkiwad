@@ -1,9 +1,6 @@
 #include <kiwad/kiwad.h>
 
-// See SPEC.txt for information regarding the KIWAD file format.
-
 int wad_archive_init(wad_archive *ar, char *filename) {
-  ar->version = -1;
 
   // Attempt to open the archive.
   ar->file = fopen(filename, "rb");
@@ -28,6 +25,7 @@ int wad_archive_init(wad_archive *ar, char *filename) {
     fseek(ar->file, 1, SEEK_CUR);
   }
 
+  // Allocate memory for the entry list.
   ar->entries = malloc(ar->entryCount * sizeof(wad_entry));
 
   // Build our list of entries.
