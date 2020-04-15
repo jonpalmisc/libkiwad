@@ -3,37 +3,62 @@
 
 #include <kiwad/kiwad.h>
 
-#define KWT_TASK_LIST "ls"
+#define KWT_OPT_HELP 0
+#define KWT_OPT_CSV 1
 
-void printError(char *error) { printf("error: %s.\n", error); }
+int match_opt(char *cmd) {
+  if (strcmp(cmd, "-c") == 0) {
+    return KWT_OPT_CSV;
+  }
+
+  return KWT_OPT_HELP;
+}
+
+void print_usage() {
+  printf("%s\n", "usage: kwt [-c] <input>");
+}
 
 int main(int argc, char *argv[]) {
 
   // Check for task and input.
   if (argc < 3) {
-    printf("%s\n", "usage: kwt <task> <input>");
+    print_usage();
     return EXIT_FAILURE;
   }
 
+  // Attempt to match the option we have been given.
+  int opt = match_opt(argv[1]);
+  if (opt == KWT_OPT_HELP) {
+    print_usage();
+    return EXIT_FAILURE;
+  }
+
+  // Now that we know we have a valid option, initialize an archive.
   wad_archive ar;
   int error = wad_archive_init(&ar, argv[2]);
   if (error != WE_SUCCESS) {
-    printf("Couldn't initialize archive struct. (Error %d)\n", error);
+    printf("error: couldn't initialize archive struct (E%02d)\n", error);
     return EXIT_FAILURE;
   }
 
-  if (strcmp(argv[1], KWT_TASK_LIST) == 0) {
-    printf("%s\n", "Offset   Size     Name");
+  // Create a CSV summary of an archive.
+  if (opt == KWT_OPT_CSV) {
+    FILE *csv_out = fopen(strcat(argv[2], ".csv"), "w");
 
-    for (int i = 0; i < ar.entryCount; i++) {
-      wad_entry *ce = &ar.entries[i];
-      
-      char compressed = ce->zipped != 0 ? '*' : '-';
-      printf("%08x %06x %c %s\n",  ce->offset, ce->size, compressed, ce->name);
+    // Start writing CSV if opening the output file was successful.
+    if (csv_out != NULL) {
+      fprintf(csv_out, "index,offset,bytes,name\n");
+
+      for (int i = 0; i < ar.entryCount; i++) {
+        wad_entry *ce = &ar.entries[i];
+        fprintf(csv_out, "%d,%d,%d,%s\n", i, ce->offset, ce->size, ce->name);
+      }
+
+      fclose(csv_out);
+    } else {
+      printf("error: couldn't write CSV output");
+      return EXIT_FAILURE;
     }
-  } else {
-    printError("unknown command");
-    return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;
